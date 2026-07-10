@@ -1,0 +1,36 @@
+name: CI Heladeria - Tests y SonarQube
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clonar repositorio
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Instalar dependencias
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov pytest-html selenium webdriver-manager
+
+    - name: Ejecutar pruebas E2E y generar Cobertura
+      run: |
+        pytest --cov=src --cov-report=xml --html=report.html
+
+    - name: Análisis de SonarCloud/SonarQube
+      uses: SonarSource/sonarqube-scan-action@v3
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
