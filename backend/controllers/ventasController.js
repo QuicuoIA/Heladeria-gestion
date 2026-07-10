@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 // controllers/ventasController.js
 // HU2.1 — Registrar venta | HU2.3 — Método de pago
 // HU3.2 — Descuento automático de inventario
@@ -223,4 +221,3 @@ async function getVentasHoy(req, res) {
 }
 
 module.exports = { crearVenta, anularVenta, getVentasHoy };
->>>>>>> Stashed changes

@@ -11,7 +11,7 @@ client.on('qr', (qr) => {
 });
 
 client.on('ready', () => {
-    console.log('Cliente de WhatsApp listo y conectado!');
+    console.log('Cliente de WhatsApp listo y conectado');
 });
 
 // Inicializamos el cliente
