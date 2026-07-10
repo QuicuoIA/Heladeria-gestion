@@ -18,8 +18,8 @@ const verificarToken = (req, res, next) => {
 
         // Extraer el usuario del token y pasarlo a la petición
         req.usuario = cifrado.usuario;
-        next(); // Todo bien, que pase a la siguiente ruta
-    } catch (error) {
+        next(); // Bien, que pase a la siguiente ruta
+    } catch {
         res.status(401).json({ msg: 'Token no válido' });
     }
 };
