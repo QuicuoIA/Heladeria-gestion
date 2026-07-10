@@ -37,3 +37,4 @@ async function registrar({ id_usuario = null, tabla, accion, id_registro = null,
 }
 
 module.exports = { registrar };
+ 

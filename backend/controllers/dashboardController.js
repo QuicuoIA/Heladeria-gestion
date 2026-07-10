@@ -10,7 +10,7 @@ const { pool } = require('../config/db');
  * Aplica: JOIN productos+categorias+ventas, GROUP BY, SUM(), ORDER BY
  */
 async function getSaboresVendidos(req, res) {
-  const dias = parseInt(req.query.dias) || 7;
+  const dias = Number.parseInt(req.query.dias) || 7;
 
   try {
     const [rows] = await pool.query(`
@@ -31,7 +31,7 @@ async function getSaboresVendidos(req, res) {
       ORDER BY total_piezas DESC
       LIMIT 10
     `, [dias]);
-
+' '
     return res.status(200).json({
       success: true,
       periodo_dias: dias,
