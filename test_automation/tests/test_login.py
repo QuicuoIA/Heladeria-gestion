@@ -15,9 +15,9 @@ def test_login_exitoso(driver):
     
     assert dashboard_page.is_loaded()
 
-@pytest.mark.parametrize("user, password, expected_error", [
+@pytest.mark.parametrize("user, password, expected_error", [ ####
     ("", "password", "El usuario es obligatorio"),
-    ("usuario", "", "La contraseña es obligatoria"),
+    ("usuario", "", "La backup.jscontraseña es obligatoria"),
     ("invalido", "invalido", "Credenciales incorrectas")
 ])
 def test_login_credenciales_invalidas(driver, user, password, expected_error):
