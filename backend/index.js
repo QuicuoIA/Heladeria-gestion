@@ -3,8 +3,8 @@ const rateLimit = require('express-rate-limit');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 require('dotenv').config();
 
 const logger = require('./config/logger');
@@ -32,25 +32,25 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Middleware básico
+// 3. Middleware básico y CORS unificado
 const corsOptions = {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
 };
-app.use(cors(corsOptions)); // Habilita peticiones solo desde orígenes permitidos
-app.use(express.json()); // Permite recibir JSON en el body
-
-// ── Middleware básico ────────────────────────────────────────
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// Morgan → archivo de acceso
+// 4. Morgan → archivo de acceso (Creación segura de la carpeta)
+const logsDir = path.join(__dirname, 'logs');
+if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir);
+}
 const accessLogStream = fs.createWriteStream(
   path.join(logsDir, 'access.log'),
   { flags: 'a' }
 );
 app.use(morgan('combined', { stream: accessLogStream }));
 
-// Medir tiempo de respuesta y loguear peticiones lentas
+// 5. Medir tiempo de respuesta y loguear peticiones lentas
 app.use(responseTimeMiddleware);
 
 // ── Rutas de la API ──────────────────────────────────────────

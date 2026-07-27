@@ -72,61 +72,61 @@ INSERT INTO productos (id_categoria, nombre, tamanio, precio, activo) VALUES
 
 -- ============================================================
 -- INVENTARIO  (HU3.1 — stock inicial en piezas)
--- cantidad_minima = 10 por defecto (HU3.5 — alerta)
+-- Ajustado para ser congruente: Entradas - Ventas - Mermas = Actual
 -- ============================================================
 INSERT INTO inventario (id_producto, cantidad_actual, cantidad_minima) VALUES
-(1,  45, 10),   -- Vaso chico
-(2,  38, 10),   -- Vaso mediano
-(3,  30, 10),   -- Vaso grande
+(1,  48, 10),   -- Vaso chico (Entraron 50, se vendieron 2)
+(2,  38, 10),   -- Vaso mediano (Entraron 40, se vendieron 2)
+(3,  30, 10),   -- Vaso grande (1 venta anulada, stock se mantiene)
 (4,  20, 10),   -- Vaso con fruta chico
 (5,  15, 10),   -- Vaso con fruta grande
-(6,  60, 15),   -- Barquillo sencillo
+(6,  60, 15),   -- Barquillo sencillo (Entraron 65, se vendieron 5)
 (7,  40, 10),   -- Barquillo doble
 (8,  25, 10),   -- Barquillo triple
 (9,  20, 10),   -- Barquillo cajeta
 (10, 18, 8),    -- Canasta mediana
 (11, 12, 5),    -- Canasta grande
-(12,  8, 3),    -- Canasta familiar  ← ya está en alerta (8 <= 10 default, pero su mínimo es 3)
-(13, 30, 10),   -- Agua jamaica
+(12,  8, 3),    -- Canasta familiar (Entraron 10, baja de 2 por merma)
+(13, 34, 10),   -- Agua jamaica (Entraron 35, se vendió 1)
 (14, 28, 10),   -- Agua horchata
 (15, 35, 10),   -- Agua limón
 (16, 22, 10),   -- Agua tamarindo
 (17, 20, 10),   -- Agua pepino
-(18, 10, 5),    -- Medio litro nieve  ← en alerta (10 <= 10)
-(19,  6, 3),    -- Un litro nieve
+(18, 10, 5),    -- Medio litro nieve
+(19,  7, 3),    -- Un litro nieve (Entraron 8, se vendió 1)
 (20,  4, 2),    -- Dos litros nieve
 (21,  3, 2),    -- Nieve regalo
 (22,  0, 5);    -- Vaso especial (desactivado)
 
 -- ============================================================
--- VENTAS DE EJEMPLO (últimos 3 días, solo ventas activas)
+-- VENTAS DE EJEMPLO (últimos 3 días, usando CURDATE() para precisión)
 -- ============================================================
 INSERT INTO ventas
   (id_usuario, id_producto, cantidad, precio_venta, subtotal, metodo_pago, anulada, fecha_venta)
 VALUES
 -- Hace 2 días
-(2, 6, 1, 18.00, 18.00, 'efectivo',      0, NOW() - INTERVAL 2 DAY + INTERVAL '10:05' HOUR_MINUTE),
-(2, 1, 1, 18.00, 18.00, 'efectivo',      0, NOW() - INTERVAL 2 DAY + INTERVAL '10:12' HOUR_MINUTE),
-(2,13, 1, 20.00, 20.00, 'efectivo',      0, NOW() - INTERVAL 2 DAY + INTERVAL '10:12' HOUR_MINUTE),
-(2, 7, 1, 30.00, 30.00, 'transferencia', 0, NOW() - INTERVAL 2 DAY + INTERVAL '11:30' HOUR_MINUTE),
-(2, 2, 2, 25.00, 50.00, 'efectivo',      0, NOW() - INTERVAL 2 DAY + INTERVAL '13:00' HOUR_MINUTE),
-(3, 6, 1, 18.00, 18.00, 'efectivo',      0, NOW() - INTERVAL 2 DAY + INTERVAL '16:45' HOUR_MINUTE),
+(2, 6, 1, 18.00, 18.00, 'efectivo',      0, CURDATE() - INTERVAL 2 DAY + INTERVAL '10:05' HOUR_MINUTE),
+(2, 1, 1, 18.00, 18.00, 'efectivo',      0, CURDATE() - INTERVAL 2 DAY + INTERVAL '10:12' HOUR_MINUTE),
+(2, 13, 1, 20.00, 20.00, 'efectivo',     0, CURDATE() - INTERVAL 2 DAY + INTERVAL '10:12' HOUR_MINUTE),
+(2, 7, 1, 30.00, 30.00, 'transferencia', 0, CURDATE() - INTERVAL 2 DAY + INTERVAL '11:30' HOUR_MINUTE),
+(2, 2, 2, 25.00, 50.00, 'efectivo',      0, CURDATE() - INTERVAL 2 DAY + INTERVAL '13:00' HOUR_MINUTE),
+(3, 6, 1, 18.00, 18.00, 'efectivo',      0, CURDATE() - INTERVAL 2 DAY + INTERVAL '16:45' HOUR_MINUTE),
 -- Ayer
-(2, 8, 1, 42.00, 42.00, 'efectivo',      0, NOW() - INTERVAL 1 DAY + INTERVAL '09:20' HOUR_MINUTE),
-(3, 6, 2, 18.00, 36.00, 'efectivo',      0, NOW() - INTERVAL 1 DAY + INTERVAL '10:05' HOUR_MINUTE),
-(2,19, 1, 95.00, 95.00, 'transferencia', 0, NOW() - INTERVAL 1 DAY + INTERVAL '11:00' HOUR_MINUTE),
-(2, 4, 1, 22.00, 22.00, 'efectivo',      0, NOW() - INTERVAL 1 DAY + INTERVAL '12:30' HOUR_MINUTE),
-(3, 7, 1, 30.00, 30.00, 'efectivo',      0, NOW() - INTERVAL 1 DAY + INTERVAL '15:00' HOUR_MINUTE),
--- Ejemplo venta anulada (HU2.5)
-(2, 3, 1, 35.00, 35.00, 'efectivo',      1, NOW() - INTERVAL 1 DAY + INTERVAL '17:00' HOUR_MINUTE),
+(2, 8, 1, 42.00, 42.00, 'efectivo',      0, CURDATE() - INTERVAL 1 DAY + INTERVAL '09:20' HOUR_MINUTE),
+(3, 6, 2, 18.00, 36.00, 'efectivo',      0, CURDATE() - INTERVAL 1 DAY + INTERVAL '10:05' HOUR_MINUTE),
+(2, 19, 1, 95.00, 95.00, 'transferencia',0, CURDATE() - INTERVAL 1 DAY + INTERVAL '11:00' HOUR_MINUTE),
+(2, 4, 1, 22.00, 22.00, 'efectivo',      0, CURDATE() - INTERVAL 1 DAY + INTERVAL '12:30' HOUR_MINUTE),
+(3, 7, 1, 30.00, 30.00, 'efectivo',      0, CURDATE() - INTERVAL 1 DAY + INTERVAL '15:00' HOUR_MINUTE),
+-- Ejemplo venta anulada (HU2.5) - No descuenta inventario
+(2, 3, 1, 35.00, 35.00, 'efectivo',      1, CURDATE() - INTERVAL 1 DAY + INTERVAL '17:00' HOUR_MINUTE),
 -- Hoy
-(2, 6, 1, 18.00, 18.00, 'efectivo',      0, NOW() - INTERVAL '02:10' HOUR_MINUTE),
-(2, 1, 1, 18.00, 18.00, 'transferencia', 0, NOW() - INTERVAL '01:45' HOUR_MINUTE),
-(3,14, 1, 20.00, 20.00, 'efectivo',      0, NOW() - INTERVAL '01:00' HOUR_MINUTE),
-(3, 9, 1, 22.00, 22.00, 'efectivo',      0, NOW() - INTERVAL '00:30' HOUR_MINUTE);
+(2, 6, 1, 18.00, 18.00, 'efectivo',      0, CURDATE() + INTERVAL '02:10' HOUR_MINUTE),
+(2, 1, 1, 18.00, 18.00, 'transferencia', 0, CURDATE() + INTERVAL '01:45' HOUR_MINUTE),
+(3, 14, 1, 20.00, 20.00, 'efectivo',     0, CURDATE() + INTERVAL '01:00' HOUR_MINUTE),
+(3, 9, 1, 22.00, 22.00, 'efectivo',      0, CURDATE() + INTERVAL '00:30' HOUR_MINUTE);
 
 -- ============================================================
--- MOVIMIENTOS DE INVENTARIO (HU3.2 — entradas iniciales)
+-- MOVIMIENTOS DE INVENTARIO 
 -- ============================================================
 INSERT INTO movimientos_inventario
   (id_producto, id_usuario, tipo, cantidad, nota, id_venta)
@@ -136,13 +136,31 @@ VALUES
 (2,  1, 'entrada', 40, 'Stock inicial apertura', NULL),
 (6,  1, 'entrada', 65, 'Stock inicial apertura', NULL),
 (13, 1, 'entrada', 35, 'Compra Jamaica 35 bolsas', NULL),
-(19, 1, 'entrada', 8,  'Pedido envases 1L', NULL),
--- Ventas (HU3.2 — descuento automático al registrar venta)
-(6,  2, 'venta',   1,  NULL, 1),
-(1,  2, 'venta',   1,  NULL, 2),
-(13, 2, 'venta',   1,  NULL, 3),
-(7,  2, 'venta',   1,  NULL, 4),
-(2,  2, 'venta',   2,  NULL, 5),
+(19, 1, 'entrada',  8, 'Pedido envases 1L', NULL),
+(12, 1, 'entrada', 10, 'Stock inicial canastas', NULL),
+
+-- Ventas de hace 2 días
+(6,  2, 'venta', 1, NULL, 1),
+(1,  2, 'venta', 1, NULL, 2),
+(13, 2, 'venta', 1, NULL, 3),
+(7,  2, 'venta', 1, NULL, 4),
+(2,  2, 'venta', 2, NULL, 5),
+(6,  3, 'venta', 1, NULL, 6),
+
+-- Ventas de ayer
+(8,  2, 'venta', 1, NULL, 7),
+(6,  3, 'venta', 2, NULL, 8),
+(19, 2, 'venta', 1, NULL, 9),
+(4,  2, 'venta', 1, NULL, 10),
+(7,  3, 'venta', 1, NULL, 11),
+-- (La venta 12 está anulada, no genera movimiento o genera una entrada compensatoria)
+
+-- Ventas de hoy
+(6,  2, 'venta', 1, NULL, 13),
+(1,  2, 'venta', 1, NULL, 14),
+(14, 3, 'venta', 1, NULL, 15),
+(9,  3, 'venta', 1, NULL, 16),
+
 -- Ajuste a la baja (HU3.4 — merma)
 (12, 1, 'ajuste_baja', 2, 'Canastas dañadas por humedad', NULL);
 

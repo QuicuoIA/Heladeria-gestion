@@ -1,65 +1,5 @@
-<<<<<<< HEAD
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-<<<<<<< HEAD
-    <title>GelatoManager - Login</title>
-</head>
-<body>
-    <h1>GelatoManager - Acceso Empleados</h1>
-    <div id="login-container">
-        <input type="text" id="user-name" placeholder="Usuario">
-        <input type="password" id="password" placeholder="Contraseña">
-        <button id="login-button">Iniciar Sesión</button>
-        <p id="error-message" style="color:red; display:none;">Credenciales incorrectas</p>
-    </div>
-=======
-    <title>Heladería Login</title>
-</head>
-<body>
-    <h1 id="dashboard-title" style="display:none;">Dashboard Heladería</h1>
-    
-    <!-- Este es el formulario que Selenium va a llenar -->
-    <div id="login-form">
-        <input type="text" id="username" placeholder="Usuario">
-        <input type="password" id="password" placeholder="Contraseña">
-        <button type="submit" id="btn-login">Ingresar</button>
-        <p class="error-text" id="error-msg" style="display:none; color: red;"></p>
-    </div>
-
-    <!-- Este script simula el backend para que los errores coincidan con las pruebas -->
-    <script>
-        document.getElementById('btn-login').addEventListener('click', () => {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            const error = document.getElementById('error-msg');
-            const title = document.getElementById('dashboard-title');
-            const form = document.getElementById('login-form');
-            
-            error.style.display = 'none';
-            
-            if (user === '' && pass === 'password') {
-                error.textContent = 'El usuario es obligatorio';
-                error.style.display = 'block';
-            } else if (user === 'usuario' && pass === '') {
-                error.textContent = 'La contraseña es obligatoria';
-                error.style.display = 'block';
-            } else if (user === 'invalido' && pass === 'invalido') {
-                error.textContent = 'Credenciales incorrectas';
-                error.style.display = 'block';
-            } else {
-                form.style.display = 'none';
-                title.style.display = 'block';
-            }
-        });
-    </script>
->>>>>>> 19ac740b0c470670e5e44907477b48a3f8ab72ab
-</body>
-</html>
-=======
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -72,4 +12,3 @@
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
->>>>>>> b3a314a6bc4a5cb7125f8c2bd4e396b2d780969c
