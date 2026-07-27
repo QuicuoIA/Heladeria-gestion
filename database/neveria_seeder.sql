@@ -164,4 +164,4 @@ SELECT p.nombre, i.cantidad_actual, i.cantidad_minima,
 FROM inventario i
 JOIN productos p ON p.id_producto = i.id_producto
 WHERE i.cantidad_actual <= i.cantidad_minima
-ORDER BY i.cantidad_actual;`
+ORDER BY i.cantidad_actual;

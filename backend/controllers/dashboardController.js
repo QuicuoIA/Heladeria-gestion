@@ -1,181 +1,150 @@
-// controllers/dashboardController.js
-// HU4.1 — Dashboard de administrador
-// Semana 4 — Consultas con JOIN, GROUP BY, SUM()
+// ============================================================
+// ARCHIVO: backend/controllers/dashboardController.js
+// DESCRIPCIÓN: Controlador del dashboard — métricas y reportes
+//              de ventas para dueño y encargado.
+// ============================================================
 
-const { pool } = require('../config/db');
+const pool = require('../config/database');
 
-/**
- * GET /api/dashboard/sabores-vendidos
- * HU4.4 — Ranking de productos más vendidos (últimos 7 días)
- * Aplica: JOIN productos+categorias+ventas, GROUP BY, SUM(), ORDER BY
- */
-async function getSaboresVendidos(req, res) {
-  const dias = Number.parseInt(req.query.dias) || 7;
-
+// ── GET /api/dashboard/sabores-vendidos?dias=7 ──────────────
+const getSaboresVendidos = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT
-        p.id_producto,
-        p.nombre,
-        p.tamanio,
-        c.nombre                    AS categoria,
-        SUM(v.cantidad)             AS total_piezas,
-        SUM(v.subtotal)             AS total_dinero,
-        COUNT(v.id_venta)           AS num_ventas
-      FROM ventas v
-      JOIN productos  p ON p.id_producto  = v.id_producto
-      JOIN categorias c ON c.id_categoria = p.id_categoria
-      WHERE v.anulada = 0
-        AND v.fecha_venta >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-      GROUP BY p.id_producto, p.nombre, p.tamanio, c.nombre
-      ORDER BY total_piezas DESC
-      LIMIT 10
-    `, [dias]);
-' '
-    return res.status(200).json({
-      success: true,
-      periodo_dias: dias,
-      sabores: rows.map(r => ({
-        ...r,
-        total_dinero: parseFloat(r.total_dinero),
-      })),
-    });
+    const dias = Number.parseInt(req.query.dias, 10) || 7;
 
+    const [rows] = await pool.execute(
+      `SELECT
+         p.id_producto,
+         p.nombre,
+         p.tamanio,
+         c.nombre            AS categoria,
+         SUM(v.cantidad)     AS total_piezas,
+         SUM(v.subtotal)     AS total_dinero,
+         COUNT(v.id_venta)   AS num_ventas
+       FROM ventas v
+       JOIN productos  p ON p.id_producto  = v.id_producto
+       JOIN categorias c ON c.id_categoria = p.id_categoria
+       WHERE v.anulada = 0
+         AND v.fecha_venta >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+       GROUP BY p.id_producto, p.nombre, p.tamanio, c.nombre
+       ORDER BY total_piezas DESC
+       LIMIT 10`,
+      [dias]
+    );
+
+    return res.status(200).json({ success: true, dias, sabores: rows });
   } catch (err) {
-    console.error('Error en getSaboresVendidos:', err);
+    console.error('[DashboardController.getSaboresVendidos]', err);
     return res.status(500).json({ success: false, mensaje: 'Error al obtener sabores vendidos.' });
   }
-}
+};
 
-/**
- * GET /api/dashboard/total-mensual
- * HU4.1/HU4.3 — Total vendido agrupado por día del mes actual
- * Aplica: GROUP BY DATE(), SUM(), COUNT()
- */
-async function getTotalMensual(req, res) {
-  // Permite consultar mes/año específico: ?mes=6&anio=2025
-  const mes  = parseInt(req.query.mes)  || new Date().getMonth() + 1;
-  const anio = parseInt(req.query.anio) || new Date().getFullYear();
-
+// ── GET /api/dashboard/total-mensual?mes&anio ───────────────
+const getTotalMensual = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT
-        DATE(v.fecha_venta)         AS dia,
-        COUNT(v.id_venta)           AS num_ventas,
-        SUM(v.subtotal)             AS total_dia,
-        SUM(CASE WHEN v.metodo_pago = 'efectivo'       THEN v.subtotal ELSE 0 END) AS efectivo,
-        SUM(CASE WHEN v.metodo_pago = 'transferencia'  THEN v.subtotal ELSE 0 END) AS transferencia
-      FROM ventas v
-      WHERE v.anulada = 0
-        AND MONTH(v.fecha_venta) = ?
-        AND YEAR(v.fecha_venta)  = ?
-      GROUP BY DATE(v.fecha_venta)
-      ORDER BY dia ASC
-    `, [mes, anio]);
+    const hoy = new Date();
+    const mes = Number.parseInt(req.query.mes, 10) || hoy.getMonth() + 1;
+    const anio = Number.parseInt(req.query.anio, 10) || hoy.getFullYear();
 
-    const total_mes = rows.reduce((acc, r) => acc + parseFloat(r.total_dia), 0);
+    // Usar rango de fechas para aprovechar índices
+    const fechaInicio = `${anio}-${String(mes).padStart(2, '0')}-01`;
+    const fechaFin = new Date(anio, mes, 1); // primer día del mes siguiente
+    const fechaFinStr = `${fechaFin.getFullYear()}-${String(fechaFin.getMonth() + 1).padStart(2, '0')}-01`;
 
-    return res.status(200).json({
-      success: true,
-      mes,
-      anio,
-      total_mes:  parseFloat(total_mes.toFixed(2)),
-      dias: rows.map(r => ({
-        ...r,
-        total_dia:     parseFloat(r.total_dia),
-        efectivo:      parseFloat(r.efectivo),
-        transferencia: parseFloat(r.transferencia),
-      })),
-    });
+    const [rows] = await pool.execute(
+      `SELECT
+         DATE(fecha_venta)                                                  AS dia,
+         COUNT(id_venta)                                                    AS num_ventas,
+         SUM(subtotal)                                                      AS total_dia,
+         SUM(CASE WHEN metodo_pago = 'efectivo'      THEN subtotal ELSE 0 END) AS efectivo,
+         SUM(CASE WHEN metodo_pago = 'transferencia' THEN subtotal ELSE 0 END) AS transferencia
+       FROM ventas
+       WHERE anulada = 0
+         AND fecha_venta >= ?
+         AND fecha_venta  < ?
+       GROUP BY DATE(fecha_venta)
+       ORDER BY dia ASC`,
+      [fechaInicio, fechaFinStr]
+    );
 
+    return res.status(200).json({ success: true, mes, anio, dias: rows });
   } catch (err) {
-    console.error('Error en getTotalMensual:', err);
-    return res.status(500).json({ success: false, mensaje: 'Error al obtener total mensual.' });
+    console.error('[DashboardController.getTotalMensual]', err);
+    return res.status(500).json({ success: false, mensaje: 'Error al obtener el total mensual.' });
   }
-}
+};
 
-/**
- * GET /api/dashboard/resumen-hoy
- * HU4.1 — Resumen general del día para el dashboard
- */
-async function getResumenHoy(req, res) {
+// ── GET /api/dashboard/resumen-hoy ──────────────────────────
+const getResumenHoy = async (req, res) => {
   try {
-    const [[resumen]] = await pool.query(`
-      SELECT
-        COUNT(v.id_venta)                                           AS num_ventas,
-        COALESCE(SUM(v.subtotal), 0)                               AS total_dia,
-        COALESCE(SUM(CASE WHEN v.metodo_pago = 'efectivo'      THEN v.subtotal ELSE 0 END), 0) AS efectivo,
-        COALESCE(SUM(CASE WHEN v.metodo_pago = 'transferencia' THEN v.subtotal ELSE 0 END), 0) AS transferencia
-      FROM ventas v
-      WHERE v.anulada = 0
-        AND DATE(v.fecha_venta) = CURDATE()
-    `);
+    // Totales del día
+    const [[totales]] = await pool.execute(
+      `SELECT
+         COUNT(id_venta)                                                        AS num_ventas,
+         COALESCE(SUM(subtotal), 0)                                            AS total_dia,
+         COALESCE(SUM(CASE WHEN metodo_pago = 'efectivo'      THEN subtotal ELSE 0 END), 0) AS efectivo,
+         COALESCE(SUM(CASE WHEN metodo_pago = 'transferencia' THEN subtotal ELSE 0 END), 0) AS transferencia
+       FROM ventas
+       WHERE anulada = 0
+         AND DATE(fecha_venta) = CURDATE()`
+    );
 
-    const [[alertas]] = await pool.query(`
-      SELECT COUNT(*) AS productos_bajo_stock
-      FROM inventario
-      WHERE cantidad_actual <= cantidad_minima
-    `);
+    // Productos bajo stock mínimo
+    const [[{ productos_bajo_stock }]] = await pool.execute(
+      `SELECT COUNT(*) AS productos_bajo_stock
+       FROM inventario i
+       JOIN productos p ON p.id_producto = i.id_producto
+       WHERE i.cantidad_actual <= i.cantidad_minima
+         AND p.activo = 1`
+    );
 
     return res.status(200).json({
       success: true,
-      hoy: {
-        num_ventas:          resumen.num_ventas,
-        total_dia:           parseFloat(resumen.total_dia),
-        efectivo:            parseFloat(resumen.efectivo),
-        transferencia:       parseFloat(resumen.transferencia),
-        productos_bajo_stock: alertas.productos_bajo_stock,
-      },
+      resumen: {
+        num_ventas: totales.num_ventas,
+        total_dia: parseFloat(totales.total_dia),
+        efectivo: parseFloat(totales.efectivo),
+        transferencia: parseFloat(totales.transferencia),
+        productos_bajo_stock
+      }
     });
-
   } catch (err) {
-    console.error('Error en getResumenHoy:', err);
-    return res.status(500).json({ success: false, mensaje: 'Error al obtener resumen del día.' });
+    console.error('[DashboardController.getResumenHoy]', err);
+    return res.status(500).json({ success: false, mensaje: 'Error al obtener el resumen del día.' });
   }
-}
+};
 
-/**
- * GET /api/dashboard/ventas-por-categoria
- * HU4.5 — Desglose de ventas por categoría
- */
-async function getVentasPorCategoria(req, res) {
-  const dias = parseInt(req.query.dias) || 7;
-
+// ── GET /api/dashboard/ventas-por-categoria?dias=7 ──────────
+const getVentasPorCategoria = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT
-        c.id_categoria,
-        c.nombre                  AS categoria,
-        SUM(v.cantidad)           AS total_piezas,
-        SUM(v.subtotal)           AS total_dinero,
-        COUNT(v.id_venta)         AS num_ventas
-      FROM ventas v
-      JOIN productos  p ON p.id_producto  = v.id_producto
-      JOIN categorias c ON c.id_categoria = p.id_categoria
-      WHERE v.anulada = 0
-        AND v.fecha_venta >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-      GROUP BY c.id_categoria, c.nombre
-      ORDER BY total_dinero DESC
-    `, [dias]);
+    const dias = Number.parseInt(req.query.dias, 10) || 7;
 
-    return res.status(200).json({
-      success: true,
-      periodo_dias: dias,
-      categorias: rows.map(r => ({
-        ...r,
-        total_dinero: parseFloat(r.total_dinero),
-      })),
-    });
+    const [rows] = await pool.execute(
+      `SELECT
+         c.id_categoria,
+         c.nombre            AS categoria,
+         SUM(v.cantidad)     AS total_piezas,
+         SUM(v.subtotal)     AS total_dinero,
+         COUNT(v.id_venta)   AS num_ventas
+       FROM ventas v
+       JOIN productos  p ON p.id_producto  = v.id_producto
+       JOIN categorias c ON c.id_categoria = p.id_categoria
+       WHERE v.anulada = 0
+         AND v.fecha_venta >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+       GROUP BY c.id_categoria, c.nombre
+       ORDER BY total_dinero DESC`,
+      [dias]
+    );
 
+    return res.status(200).json({ success: true, dias, categorias: rows });
   } catch (err) {
-    console.error('Error en getVentasPorCategoria:', err);
+    console.error('[DashboardController.getVentasPorCategoria]', err);
     return res.status(500).json({ success: false, mensaje: 'Error al obtener ventas por categoría.' });
   }
-}
+};
 
 module.exports = {
   getSaboresVendidos,
   getTotalMensual,
   getResumenHoy,
-  getVentasPorCategoria,
+  getVentasPorCategoria
 };
