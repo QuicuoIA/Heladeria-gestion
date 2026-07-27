@@ -17,6 +17,7 @@ const pool = require('../config/database');
  */
 const login = async (req, res) => {
   const { pin } = req.body;
+  
 
   if (!pin || typeof pin !== 'string' || pin.trim() === '') {
     return res.status(400).json({ success: false, mensaje: 'El PIN es requerido.' });
