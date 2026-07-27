@@ -1,0 +1,59 @@
+Paso 1: Descargar el código actualizado
+
+Abran su terminal y clonen el repositorio:
+git clone [https://github.com/QuicuoIA/Heladeria-gestion.git](https://github.com/QuicuoIA/Heladeria-gestion.git)
+
+Entren a la carpeta del proyecto:
+cd Heladeria-gestion
+
+Cámbiense a la rama final donde está todo integrado:
+git checkout release/v1.0.0
+
+Paso 2: Base de Datos (XAMPP)
+
+Enciendan Apache y MySQL en XAMPP.
+
+Vayan a http://localhost/phpmyadmin.
+
+Creen una nueva base de datos llamada exactamente neveria.
+
+Seleccionen la base de datos, vayan a la pestaña "Importar" y suban el archivo .sql que está en la carpeta database/.
+
+Paso 3: Configurar y encender el Backend
+
+En VS Code, abran una terminal y entren a la carpeta del backend:
+cd backend
+
+Creen un archivo llamado .env en esa carpeta y peguen esto (asegúrense de que DB_PASSWORD esté vacío si su XAMPP no tiene contraseña):
+
+Fragmento de código
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=neveria
+JWT_SECRET=ClaveSuperSecretaNeveria2026
+CORS_ORIGIN=http://localhost:5173
+PORT=3000
+Instalen las librerías:
+npm install
+
+Levanten el servidor:
+npm start (Debe salir un mensaje verde de conexión exitosa).
+
+Paso 4: Configurar y encender el Frontend
+
+Abran una nueva terminal en VS Code (sin cerrar la del backend) y entren al frontend:
+cd frontend
+
+Creen un archivo llamado .env en esa carpeta y peguen esto:
+
+Fragmento de código
+VITE_API_URL=http://localhost:3000
+Instalen las librerías:
+npm install
+
+Levanten la página:
+npm run dev
+
+Paso 5: Acceso al Sistema
+Vayan a http://localhost:5173 e ingresen con el PIN de administrador: 1234
